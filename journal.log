@@ -138,3 +138,17 @@ Failed to load c++ bson extension, using pure JS version
 player cleared
 item cleared
 weapon cleared
+Failed to load c++ bson extension, using pure JS version
+{ name: 'orel',
+  type: 'player',
+  room: 'default',
+  x: 9,
+  y: 9,
+  color: '#50577E',
+  lastMove: 1474468218243,
+  lastDirection: false,
+  life: 2,
+  gift: 20,
+  invincible: false,
+  speed: false,
+  _id: 57e2997a6ea981ee59f15640 }
