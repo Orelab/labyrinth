@@ -20,8 +20,11 @@ http://[serveraddress]:8088/admin
 
 ## Some screenshot
 
-![alt tag](https://github.com/Orelab/labyrinth/assets/img/screenshot1.jpg)
-![alt tag](https://github.com/Orelab/labyrinth/assets/img/screenshot2.png)
-![alt tag](https://github.com/Orelab/labyrinth/assets/img/screenshot3.png)
-![alt tag](https://github.com/Orelab/labyrinth/assets/img/screenshot4.png)
+![alt tag](https://github.com/Orelab/labyrinth/blob/master/assets/img/screenshot1.jpg)
+
+![alt tag](https://github.com/Orelab/labyrinth/blob/master/assets/img/screenshot2.png)
+
+![alt tag](https://github.com/Orelab/labyrinth/blob/master/assets/img/screenshot3.png)
+
+![alt tag](https://github.com/Orelab/labyrinth/blob/master/assets/img/screenshot4.png)
 
