@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+		<meta name="author" content="Aurélien Chirot">
+
+		<title>controller</title>
+	
+		<link rel="apple-touch-icon" href="assets/img/logo.png">
+		<link rel="apple-touch-icon-precomposed" href="assets/img/logo.png">
+		<link rel="apple-touch-startup-image" href="assets/img/logo.png" />
+		<link rel="shortcut icon" href="assets/img/favicon.png">
+		<link rel="author" href="http://www.funworks.fr" />
+		<link rel="stylesheet" href="/assets/css/controller.css" />
+
+		<script src="/assets/js/jquery-1.10.1.min.js"></script>
+		<script src="/assets/js/jquery-ui.min.js"></script>
+		<script src="/assets/js/purl.js"></script>
+		<script src="/assets/js/jquery.event.move.js"></script>
+		<script src="/socket.io/socket.io.js"></script>
+	<body id="controller">
+
+
+
+
+
+		<section id="pad">
+			<button id="select">STOP</button>
+			<button id="top"></button>
+			<button id="use">STOP</button>
+			<button id="left"></button>
+			<button id="bottom"></button>
+			<button id="right"></button>
+		
+		</section>
+
+
+
+		<section id="goodies">
+			<button id="speed">speed<br/>0</button>
+			<button id="thief">thief<br/>0</button>
+			<button id="life">life<br/>3</button>
+			<button id="slide">slide<br/>0</button>
+			<button id="punch">punch<br/>0</button>
+			<button id="music">music off</button>
+		</section>
+
+
+		<section id="player">
+			<div></div>
+			<p>Gaston</p>
+		</section>
+
+
+		<audio id="foofighters">
+			<source src="/assets/audio/foofighters.mp3" />
+		</audio>
+
+		<audio id="treasure">
+			<source src="/assets/audio/treasure.mp3" />
+		</audio>
+
+
+		<script>
+		
+		
+		$('#music').click(function(){
+			audio = $('#foofighters').get(0)
+			audio.volume = 0.3
+			
+			if( audio.paused ){
+				$('#foofighters').get(0).play()
+				$('#music').html('music on')
+			}
+			else
+			{
+				$('#foofighters').get(0).pause()
+				$('#music').html('music off')
+			}
+		})
+
+			$(window).disableSelection()
+
+
+			Array.prototype.has=function(v){
+				for (i=0;i<this.length;i++){
+					if (this[i]==v) return i;
+				}
+				return false;
+			}
+			
+			var player = {
+				_id     : 0,
+				name    : '',
+				color   : '',
+				speed   : 0,
+				thief   : 0,
+				life    : 0,
+				slide   : 0,
+				punch   : 0,
+				nextMove: '',
+				nexPreferedMove: ''
+			}
+			
+			
+			uid = $.url().param('userid')
+			
+			if( ! uid ){
+				while( !player.name ){ player.name = prompt('login ?') }
+				$('#music').trigger('click')
+			}
+			else
+			{
+				//
+				//	Not finished yet
+				//	The aim of this code is to be able to control
+				//	 existing player by passing it's _ID in the url.
+				//
+				//	We need to code a specific socket for that...
+				//
+				player._id = uid
+			}
+			
+			
+			$('#player p').html( player.name )
+			
+			var socket = io.connect(':8080');
+
+
+			blink = function(id){
+				$('#'+id)
+					.clearQueue()
+					.animate({backgroundColor:'yellow'},500,'easeInOutElastic')
+					.animate({backgroundColor:'#e9e8e8'},500,'easeInOutElastic')
+
+				$('#treasure').get(0).volume = 0.6
+				$('#treasure').get(0).play()
+			}
+
+
+			updatePlayerInfo = function(p){
+				if(p._id==player._id){
+				
+					$.each(p,function(i,v){
+						if(['speed','thief','life','slide','punch'].has(i)){
+							newval = i+'<br>'+v
+
+							if( $('#'+i).html() != newval ){
+								$('#'+i).html(newval)
+								blink(i)
+							}
+						}
+					})
+/*
+					$('#speed').html('SPEED<br/>'+ Math.round(1-p.speed) )
+					$('#thief').html('THIEF<br/>'+p.thief)
+					$('#life').html('LIFE<br/>'+p.life)
+					$('#slide').html('SLIDE<br/>'+p.slide)
+					$('#punch').html('PUNCH<br/>'+p.punch)
+*/
+					$('#player div').css('background-color',player.color)
+					
+				}
+			}
+
+
+			socket.emit('newPlayer',{name:player.name},function(p){
+				$.each(p,function(i,v){
+					player[i] = v
+				})
+				updatePlayerInfo(p)
+				move()
+			});
+
+			socket.on('newPlayerInfo', updatePlayerInfo);
+
+			prepareToMove = function(){
+				player.nextMove = $(this).attr('id')
+			}
+			
+			$('#pad button').on('click',prepareToMove)
+			//$('#pad button').on('mouseover',prepareToMove)
+
+
+			move = function(){
+				if( player.nextMove ){
+					socket.emit('playerMove',{
+						_id:player._id,
+						name:player.name,
+						direction:player.nextMove
+					})
+					//player.nextMove = null
+				}
+				setTimeout('move()', player.speed*1000)
+			}
+			
+		</script>
+	</body>
+</html>

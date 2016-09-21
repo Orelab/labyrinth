@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+		<meta name="author" content="Aurélien Chirot">
+
+		<title>controller</title>
+	
+		<link rel="apple-touch-icon" href="assets/img/logo.png">
+		<link rel="apple-touch-icon-precomposed" href="assets/img/logo.png">
+		<link rel="apple-touch-startup-image" href="assets/img/logo.png" />
+		<link rel="shortcut icon" href="assets/img/favicon.png">
+		<link rel="author" href="http://www.funworks.fr" />
+		<link rel="stylesheet" href="/assets/css/controller3.css" />
+
+		<!-- jQuery -->
+		<script src="/assets/js/jquery-1.10.1.min.js"></script>
+		<script src="/assets/js/jquery-ui.min.js"></script>
+
+		<!-- finger (drag) -->
+		<script src="/assets/js/jquery.finger.js"></script>
+		
+		<!-- mobile compatibility -->
+		<script src="/assets/js/jquery.ui.touch-punch.js"></script>
+		
+		 
+		<!-- URL parser -->
+		<script src="/assets/js/purl.js"></script>
+		
+		<!-- socket -->
+		<script src="/socket.io/socket.io.js"></script>
+	</head>
+	<body id="controller">
+
+
+
+
+		<section id="pad">
+			<div id="cursor">
+				<div id="pointer"></div>
+			</div>
+		</section>
+
+
+		<section id="player">
+			<div id="avatar"></div>
+			<p id="name">Gaston</p>
+			<div id="dir">
+				<p>next move : <img src="/assets/img/stop.png"/></p>
+				<p>alternative : <img src="/assets/img/stop.png"/></p>
+			</div>
+			<p>game at <a href="http://dev.funworks.fr:8080s">dev.funworks.fr:8080</a></p>
+		</section>
+
+
+		<section id="goodies">
+			<button id="speed">speed<br/>0</button>
+			<button id="thief">thief<br/>0</button>
+			<button id="life" >life<br/>3</button>
+			<button id="slide">slide<br/>0</button>
+			<button id="punch">punch<br/>0</button>
+			<button id="music">music off</button>
+		</section>
+
+
+		<audio id="foofighters">
+			<source src="/assets/audio/foofighters.mp3" />
+		</audio>
+
+
+		<script>
+
+
+			//-- misc
+			
+			$(window).disableSelection()
+
+			Array.prototype.has=function(v){
+				for (i=0;i<this.length;i++){
+					if (this[i]==v) return true;
+				}
+				return false;
+			}
+
+			blink = function(id){
+				$('#'+id)
+					.clearQueue()
+					.animate({backgroundColor:'yellow'},500,'easeInOutElastic')
+					.animate({backgroundColor:'#e9e8e8'},500,'easeInOutElastic')
+
+				//playSound('metalplate')
+			}
+
+			var socket = io.connect(':8080');
+			
+
+			var player = {
+				_id     : 0,
+				name    : '',
+				color   : '',
+				speed   : 0,
+				thief   : 0,
+				life    : 0,
+				slide   : 0,
+				punch   : 0,
+				nextMove: 'stop',
+				altMove: 'stop'
+			}
+		
+		
+			
+			//-- sounds
+			
+			playSound = function( sound ){
+				var snd  = new Audio()
+				var src  = document.createElement("source")
+				src.type = 'audio/mpeg'
+				src.src  = '/assets/audio/' + sound + '.mp3'
+				snd.appendChild(src)
+				snd.play()
+			}
+			
+			
+					
+		
+			//-- paddle
+
+			var variateur=1
+			
+			stop = function(){
+				player.nextMove = 'stop'
+				player.altMove = 'stop'
+				$('#dir').html('								\
+					<p>next move : <img src="/assets/img/stop.png"/>	\
+					<p>alternative : <img src="/assets/img/stop.png"/>	\
+				')
+			}
+			
+			$('#pointer').draggable({
+				containment:'parent',
+				revert:true,
+				stop:stop
+			})
+			.on('drag', function(e){
+				if( e.dx && e.dy ){//&& variateur++ % 30 == 0 ){
+					variateur = 1
+					
+					// calculate the prefered move
+					
+					if( e.dx<0 && Math.abs(e.dx)>Math.abs(e.dy) ) player.nextMove = 'left'
+					if( e.dx>0 && Math.abs(e.dx)>Math.abs(e.dy) ) player.nextMove = 'right'
+					if( e.dy<0 && Math.abs(e.dx)<Math.abs(e.dy) ) player.nextMove = 'top'
+					if( e.dy>0 && Math.abs(e.dx)<Math.abs(e.dy) ) player.nextMove = 'bottom'
+					if( Math.abs(e.dx)<20 && Math.abs(e.dy)<20 ) return stop()
+
+
+					// calculate the alt move now
+
+					player.altMove = 'stop'
+					if( e.dx<0 && e.dy<-30 && Math.abs(e.dx)>Math.abs(e.dy) ) player.altMove = 'top'
+					if( e.dx<0 && e.dy> 30 && Math.abs(e.dx)>Math.abs(e.dy) ) player.altMove = 'bottom'
+					if( e.dx>0 && e.dy<-30 && Math.abs(e.dx)>Math.abs(e.dy) ) player.altMove = 'top'
+					if( e.dx>0 && e.dy> 30 && Math.abs(e.dx)>Math.abs(e.dy) ) player.altMove = 'bottom'
+					if( e.dy<0 && e.dx<-30 && Math.abs(e.dx)<Math.abs(e.dy) ) player.altMove = 'left'
+					if( e.dy<0 && e.dx> 30 && Math.abs(e.dx)<Math.abs(e.dy) ) player.altMove = 'right'
+					if( e.dy>0 && e.dx<-30 && Math.abs(e.dx)<Math.abs(e.dy) ) player.altMove = 'left'
+					if( e.dy>0 && e.dx> 30 && Math.abs(e.dx)<Math.abs(e.dy) ) player.altMove = 'right'
+
+					if( player.altMove == 'stop' ) player.altMove = player.nextMove
+				}
+				
+				$('#dir').html('													\
+					<p>next move : <img src="/assets/img/' + player.nextMove + '.png"/>		\
+					<p>alternative : <img src="/assets/img/' + player.altMove + '.png"/>	\
+				')
+			})
+						
+			
+			
+			
+			//-- music
+			
+			$('#music').click(function(){
+				audio = $('#foofighters').get(0)
+				audio.volume = 0.3
+				
+				if( audio.paused ){
+					$('#foofighters').get(0).play()
+					$('#music').html('music on')
+				}
+				else
+				{
+					$('#foofighters').get(0).pause()
+					$('#music').html('music off')
+				}
+			})
+			
+			
+			
+			//-- player name
+			
+			uid = $.url().param('userid')
+			
+			if( ! uid ){
+				while( !player.name ){ player.name = prompt('login ?') }
+				//$('#music').trigger('click')
+			}
+			else
+			{
+				//
+				//	Not finished yet
+				//	The aim of this code is to be able to control
+				//	an existing player by passing it's _ID in the url.
+				//
+				//	We need to code a specific socket for that...
+				//
+				player._id = uid
+			}
+			
+			$('#name').html( player.name )
+			
+
+
+
+
+			//-- event
+			
+
+			updatePlayerInfo = function(p){
+				if(p._id==player._id){
+				
+					$.each(p,function(i,v){
+						if(['speed','thief','life','slide','punch'].has(i)){
+							player[i] = v
+							
+							var newval = i+'<br>'+v
+
+							if( $('#'+i).html() != newval ){
+								$('#'+i).html(newval)
+								blink(i)
+							}
+						}
+					})
+					$('#avatar').css('background-color',player.color)
+				}
+			}
+
+			move = function(){
+				if( player.nextMove != 'stop' ){
+					socket.emit('playerMove',{
+						_id:player._id,
+						direction:player.nextMove,
+						alternative:player.altMove
+					})
+				}
+				speed = (1-((player.speed<20?(player.speed/3):9)/10))*200
+				setTimeout('move()', speed)
+			}
+
+			socket.emit('newPlayer',{name:player.name},function(p){
+				$.each(p,function(i,v){
+					player[i] = v
+				})
+				updatePlayerInfo(p)
+				move()
+			});
+
+			socket.on('newPlayerInfo', updatePlayerInfo);
+
+
+			socket.on('deleteObject', function(id){
+				playSound('metalplate') 
+			})
+
+			
+		</script>
+	</body>
+</html>

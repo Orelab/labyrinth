@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+		<meta name="author" content="Aurélien Chirot">
+
+		<title>admin</title>
+	
+		<link rel="apple-touch-icon" href="assets/img/logo.png">
+		<link rel="apple-touch-icon-precomposed" href="assets/img/logo.png">
+		<link rel="apple-touch-startup-image" href="assets/img/logo.png" />
+		<link rel="shortcut icon" href="assets/img/favicon.png">
+		<link rel="author" href="http://www.funworks.fr" />
+		<link rel="stylesheet" href="/assets/css/admin.css" />
+		<link rel="stylesheet" href="/assets/css/jquery-ui.min.css" />
+
+		<script src="/assets/js/jquery-1.10.1.min.js"></script>
+		<script src="/assets/js/jquery-ui.min.js"></script>
+		<script src="/socket.io/socket.io.js"></script>
+	<body id="admin">
+	
+		
+		<fieldset>
+			<legend>Players</legend>
+			<div id="player"></div>
+			<input type="button" name="reset_players" value="kill all players" />
+		</fieldset>
+
+
+		<fieldset>
+			<legend>Items</legend>
+			<div id="item"></div>
+			<input type="button" name="reset_items" value="remove all items" />
+		</fieldset>
+
+
+		<fieldset>
+			<legend>Weapons</legend>
+			<div id="weapon"></div>
+			<input type="button" name="reset_weapons" value="remove all weapons" />
+		</fieldset>
+
+		<script>
+
+			$('body').disableSelection()
+
+			//-- enable communication
+
+			var socket = io.connect();
+
+
+
+			//-- load the items (players, objects...)
+
+			addObject = function(p){
+				$('<span>' + p.name+"</span>")
+					.attr('class',p.type)
+					.attr('id',p._id)
+					.appendTo('#' + p.type)
+					.css('backgroundColor',(p.color?p.color:'lightGrey'))
+			}
+
+			socket.emit('objectList',{},function(players){
+				$(players).each(function(){
+					addObject( this )
+				})
+			});
+
+			socket.on('addObject', function(o){
+				addObject( o )
+			});
+			
+			socket.on('deleteObject', function(id){
+				$('#'+id).remove()
+			});
+
+
+			
+			//-- clear players, items & weapons
+
+			$('input[name="reset_players"]').on('click',function(e){
+				socket.emit('clearObjects',{type:'player'},function(){
+					$('#player').empty()
+				})
+			})	
+
+			$('input[name="reset_items"]').on('click',function(e){
+				socket.emit('clearObjects',{type:'item'},function(){
+					$('#item').empty()
+				})
+			})
+
+			$('input[name="reset_weapons"]').on('click',function(e){
+				socket.emit('clearObjects',{type:'weapon'},function(){
+					$('#weapon').empty()
+				})
+			})
+
+			//-- delete specific player, item or weapon
+			
+			$('fieldset').delegate('span','dblclick',function(e){
+				var o = $(this)
+				socket.emit('deleteObject',$(this).attr('id'),function(){
+					o.remove()
+				})
+			})
+			
+			
+
+		</script>
+	</body>
+</html>

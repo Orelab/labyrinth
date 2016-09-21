@@ -1,0 +1,251 @@
+* {
+	margin: 0;
+	padding: 0;
+}
+
+body {
+	background-color: lightGrey;
+}
+
+
+
+
+/*---[ interface ]------------------------------------------------------*/
+
+header,
+section,
+canvas,
+footer {
+	margin: auto;
+	font-family: verdana;
+}
+
+header img,
+footer img,
+footer button {
+	width: 160px;
+	height: 160px;
+}
+
+footer section {
+	width: 50%;
+	float: left;	
+	text-align: center;
+	margin: 15px 0;
+}
+
+footer section p {
+	text-align: left;
+	margin: 10px;
+}
+
+
+footer>p {
+	text-align: center;
+	margin: 10px;
+	clear: both;
+}
+
+footer iframe {
+	width: 100%;
+	min-height: 330px;
+	border: none;
+	overflow: hidden;
+}
+
+#panel {
+	position: absolute;
+	top: 20px;
+	right: 20px;
+	width: 150px;
+	z-index: 10;
+	background-color: white;
+	padding: 10px;
+	font-family: verdana, arial;
+}
+
+#panel h4 {
+	text-align: center;
+	color: #008EFF;
+	margin-bottom: 6px;
+	text-shadow: 2px 2px 5px #605B5B;	
+}
+
+#panel img {
+	max-width: 150px;
+}
+
+#panel button,
+#panel input {
+	width: 100%;
+}
+
+#stats {
+	margin-top: 5px;
+}
+
+#stats, #fpsGraph {
+	width: 100% !important;
+}
+
+
+
+/*---[ grid ]-----------------------------------------------------------*/
+
+
+#gameboard {
+	display: block;
+ooverflow: hidden;
+	position: relative;
+	background-color: white;
+	background: lightGreen url(/assets/img/ground.png);
+	background: black url(/assets/img/bg.png) repeat-x;
+}
+/*
+#gameboard {
+	width: 700px;
+	height: 550px;
+	background: url(/assets/img/arena-static.png) no-repeat center center;
+	background-size: 100% 100%;
+}
+*/
+.line {
+	display: block;
+	height: 75px;
+	font-size: 10px;
+}
+
+.line>div {
+	display: inline-block;
+	width: 100px;
+	height: 75px;
+	color: grey;
+}
+
+.ground {
+	text-align: center;
+	color: #C8C8C8 !important;
+}
+
+.wall {
+	background: url(/assets/img/ball2.png) no-repeat center center;
+	background-size: 100% 100%;
+	border-radius: 100%;
+	box-shadow: 5px 5px 5px #605B5B;
+}
+
+
+/*---[ players ]--------------------------------------------------------*/
+
+.player {
+	position: absolute;
+	display: none;
+	border-radius: 100% 100%;
+	box-shadow: 5px 5px 5px #605B5B;
+	z-index: 20;
+}
+
+.player>div {
+	width: 100%;
+	height: 100%;
+	background: url(/assets/img/smiley5.png) no-repeat center center;
+	background-size: 100% 100%;
+	margin: auto;
+}
+
+.player>p {
+	display: block;
+	position: absolute;
+	top: 40px;		/* rewritten by program */
+	width: 100%;
+	opacity: 0.7;
+	overflow: hidden;
+	background-color: white;
+	border: 1px black solid;
+	border-radius: 10px;
+	padding: 2px;
+	font-size: 9px;
+	text-align: center;
+	box-shadow: 5px 5px 5px black;
+}
+
+
+/*---[ items ]----------------------------------------------------------*/
+
+.item {
+	position: absolute;
+	display: none;
+	z-index: 10;
+}
+
+.item>div {
+	margin: 4px;
+	background: red url(/assets/img/gift.png) no-repeat center center;
+	background-size: 100% 100%;
+	box-shadow: 5px 5px 5px #605B5B;
+}
+
+.item>p {
+	display: none;
+}
+
+
+/*---[ weapons ]--------------------------------------------------------*/
+
+.weapon {
+	position: absolute;
+	display: none;
+	z-index: 10;
+}
+
+.weapon>p {
+	display: none;
+}
+
+.weapon>div {
+	display: none;
+}
+
+.weapon.trap {
+	background: url(../img/trap.png) no-repeat center center;
+	background-size: contain;
+}
+
+.weapon.rocket {
+	background: url(../img/os.png) no-repeat center center;
+	background-size: contain;
+}
+
+.weapon.bomb {
+	background: url(../img/bomb.png) no-repeat center center;
+	background-size: contain;
+}
+
+.weapon.life {
+	background: url(../img/coeur.png) no-repeat center center;
+	background-size: contain;
+}
+
+.weapon.flame {
+//	background: url(../img/flame.gif) no-repeat center center;
+	background: url(../img/flame.png) no-repeat center center;
+	background-size: contain;
+	opacity: 0.7;
+}
+
+/*---[ fusee ]----------------------------------------------------------*/
+
+.fusee {
+	position: absolute;
+	z-index: 30;
+}
+
+.fusee img {
+	width: 100%;
+}
+
+
+
+
+
+

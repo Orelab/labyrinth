@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+		<meta name="author" content="Aurélien Chirot">
+
+		<title>controller</title>
+	
+		<link rel="apple-touch-icon" href="assets/img/logo.png">
+		<link rel="apple-touch-icon-precomposed" href="assets/img/logo.png">
+		<link rel="apple-touch-startup-image" href="assets/img/logo.png" />
+		<link rel="shortcut icon" href="assets/img/favicon.png">
+		<link rel="author" href="http://www.funworks.fr" />
+		
+		<link rel="stylesheet" href="/assets/css/controller4.css" />
+
+		<!-- Modernizr
+		<script src="/assets/js/modernizr.js"></script>
+		-->
+		
+		<!-- jQuery -->
+		<script src="/assets/js/jquery-1.10.1.min.js"></script>
+		<script src="/assets/js/jquery-ui.min.js"></script>
+		<!--
+		<script src="/assets/js/jquery.mobile-1.4.3.min.js"></script>
+		-->
+
+		<!-- mobile compatibility -->
+		<script src="/assets/js/jquery.ui.touch-punch.js"></script>
+
+
+		<!-- socket -->
+		<script src="/socket.io/socket.io.js"></script>
+	</head>
+	<body id="controller">
+
+
+
+
+		<section id="pad">
+			<div id="cursor">
+				<div id="pointer"></div>
+			</div>
+		</section>
+
+
+		<section id="player">
+			<div id="avatar"></div>
+			<p id="name">Gaston</p>
+			<div id="dir">
+				<p>next move : <img src="/assets/img/stop.png"/></p>
+				<p>alternative : <img src="/assets/img/stop.png"/></p>
+			</div>
+			<p></p>
+		</section>
+
+
+		<section id="goodies">
+			<button id="speed">speed<br/>0</button>
+			<button id="thief">thief<br/>0</button>
+			<button id="life" >life<br/>3</button>
+			<button id="slide">slide<br/>0</button>
+			<button id="punch">punch<br/>0</button>
+			<button id="music">music off</button>
+		</section>
+
+
+
+
+		<script>
+
+
+			//-- App
+			
+			var app = {}
+			
+			
+			
+			// JQ optim
+				
+			app.dir = $('#dir')
+
+			app.player = $('#player')
+			
+			app.cursor = $('#cursor')
+
+			
+			app.stop = function(){
+				app.p.nextMove = 'stop'
+				app.p.altMove = 'stop'
+				app.dir.html('										\
+					<p>next move : <img src="/assets/img/stop.png"/>		\
+					<p>alternative : <img src="/assets/img/stop.png"/>	\
+				')
+			}
+
+			
+			app.pointer = $('#pointer').draggable({
+				containment:'parent',
+				revert:true,
+				stop:app.stop,
+				drag:function(e,ui){
+					app.paddlePosition=ui
+				}
+			})
+			
+			app.avatar = $('#avatar')
+				
+				
+
+						
+			
+				
+			// misc vars
+
+			app.socket = io.connect();
+
+			app.p = {
+				_id     : 0,
+				name    : '',
+				color   : '',
+				speed   : 0,
+				thief   : 0,
+				life    : 0,
+				slide   : 0,
+				punch   : 0,
+				nextMove: 'stop',
+				altMove: 'stop'
+			}
+			
+			app.paddlePosition = {}
+				
+				
+				
+			// functions
+				
+			app.blink = function(id){
+				$('#'+id)
+					.clearQueue()
+					.animate({backgroundColor:'yellow'},500,'easeInOutElastic')
+					.animate({backgroundColor:'#e9e8e8'},500,'easeInOutElastic')
+
+				//app.playSound('metalplate')
+			}
+				
+			app.playSound = function( sound ){
+				var snd  = new Audio()
+				var src  = document.createElement("source")
+				src.type = 'audio/mpeg'
+				src.src  = '/assets/audio/' + sound + '.mp3'
+				snd.appendChild(src)
+				snd.play()
+			}
+					
+			app.calculateDirections = function(){
+			
+				if( ! app.paddlePosition.position || ! app.paddlePosition.originalPosition )
+					return
+			
+				dx = app.paddlePosition.position.left - app.paddlePosition.originalPosition.left
+				dy = app.paddlePosition.position.top - app.paddlePosition.originalPosition.top
+
+				adx = Math.abs(dx)	// simulate dx/adx vars in jquery.finger plugin ;)
+				ady = Math.abs(dy)
+
+				if( dx && dy ){
+					
+					// calculate the prefered move
+					
+					if( dx<0 && adx>ady ) app.p.nextMove = 'left'
+					if( dx>0 && adx>ady ) app.p.nextMove = 'right'
+					if( dy<0 && adx<ady ) app.p.nextMove = 'top'
+					if( dy>0 && adx<ady ) app.p.nextMove = 'bottom'
+					if( adx<30 && ady<30 ) return app.stop()
+
+
+					// calculate the alt move now
+
+					app.p.altMove = 'stop'
+					if( dx<0 && dy<-20 && adx>ady ) app.p.altMove = 'top'
+					if( dx<0 && dy> 20 && adx>ady ) app.p.altMove = 'bottom'
+					if( dx>0 && dy<-20 && adx>ady ) app.p.altMove = 'top'
+					if( dx>0 && dy> 20 && adx>ady ) app.p.altMove = 'bottom'
+					if( dy<0 && dx<-20 && adx<ady ) app.p.altMove = 'left'
+					if( dy<0 && dx> 20 && adx<ady ) app.p.altMove = 'right'
+					if( dy>0 && dx<-20 && adx<ady ) app.p.altMove = 'left'
+					if( dy>0 && dx> 20 && adx<ady ) app.p.altMove = 'right'
+
+					if( app.p.altMove == 'stop' ) app.p.altMove = app.p.nextMove
+				}
+
+				app.dir.html('													\
+					<p>next move : <img src="/assets/img/' + app.p.nextMove + '.png"/>		\
+					<p>alternative : <img src="/assets/img/' + app.p.altMove + '.png"/>		\
+				')
+			}
+			
+			
+			
+			
+			// callback
+			
+			
+			app.updateNewPlayer = function(p){
+				$.each(p,function(i,v){
+					app.p[i] = v
+				})
+				app.updatePlayerInfo(p)
+				move()
+			}
+			
+			app.updatePlayerInfo = function(p){
+				if(p._id==app.p._id){
+				
+					$.each(p,function(i,v){
+						if(['speed','thief','life','slide','punch'].has(i)){
+							app.p[i] = v
+							
+							var newval = i+'<br>'+v
+
+							if( $('#'+i).html() != newval ){
+								$('#'+i).html(newval)
+								app.blink(i)
+							}
+						}
+					})
+					app.avatar.css('background-color',app.p.color)
+				}
+			}
+
+			app.updateDeleteObject = function(id){
+			//	app.playSound('metalplate') 
+			}
+			
+
+
+
+
+
+
+			//-- misc
+			
+			$(window).disableSelection()
+
+			Array.prototype.has=function(v){
+				for (i=0;i<this.length;i++){
+					if (this[i]==v) return true;
+				}
+				return false;
+			}
+
+
+
+
+			
+			
+			
+			//-- player name
+			
+			while( !app.p.name ){ app.p.name = prompt('login ?') }
+			
+			$('#name').html( app.p.name )
+			
+
+
+
+
+			//-- event
+
+			app.socket.emit('newPlayer',{name:app.p.name},app.updateNewPlayer);
+			app.socket.on('newPlayerInfo', app.updatePlayerInfo);
+			app.socket.on('deleteObject', app.updateDeleteObject)
+
+
+
+
+			//-- timer
+
+			move = function(){
+				app.calculateDirections()
+
+				if( app.p.nextMove != 'stop' ){
+					
+					app.socket.emit('playerMove',{
+						_id:app.p._id,
+						direction:app.p.nextMove,
+						alternative:app.p.altMove
+					})
+				}
+
+				//speed = (1-((app.p.speed<20?(app.p.speed/3):9)/10))*200
+				speed = 150 + ( app.p.speed<5 ? (5-app.p.speed)*40 : 0 )
+				app.player.children('p:last-child').html(speed)
+				
+				setTimeout('move()', speed)
+			}
+
+
+		</script>
+	</body>
+</html>

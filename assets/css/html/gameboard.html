@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+		<meta name="author" content="Aurélien Chirot">
+
+		<title>game</title>
+	
+		<link rel="apple-touch-icon" href="assets/img/logo.png">
+		<link rel="apple-touch-icon-precomposed" href="assets/img/logo.png">
+		<link rel="apple-touch-startup-image" href="assets/img/logo.png" />
+		<link rel="shortcut icon" href="assets/img/favicon.png">
+		<link rel="author" href="http://www.funworks.fr" />
+		<link rel="stylesheet" href="/assets/css/gameboard.css" />
+		<link rel="stylesheet" href="/assets/css/jquery-ui.min.css" />
+
+		<script src="/assets/js/jquery-1.10.1.min.js"></script>
+		<script src="/assets/js/jquery-ui.min.js"></script>
+		<script src="/assets/js/jsqr-0.2-min.js"></script>
+		<script src="/socket.io/socket.io.js"></script>
+	</head>
+	<body>
+	
+		<header></header>
+		
+		<section id="gameboard"></section>
+		
+		<footer>
+			<section>
+				<h1>Tablet & smartphone</h1>
+				<p>Utilises ta tablette ou ton smartphone comme une manette de jeu !, il te
+				suffit de flasher ce code, et vous jouerez depuis votre appareil mobile :</p>
+
+				<!-- http://goqr.me/#t=url -->
+				<a href="/ctrl" target="_blank">
+					<img src="assets/img/dev.funworks.fr.ctrl.png" alt="control your player !" />
+				</a>
+			</section>
+
+			<section>
+				<h1>Ordinateur :</h1>
+				<p>Par de tablette ni de smartphone ? Il est toujours possible de jouer 
+				depuis cet ordinateur :</p>
+				<br/>
+				<button id="controller">Afficher la manette</button>
+			</section>
+
+			<p>Fait par <a href="http://www.funworks.fr">Orel</a> pour amuser la galerie 
+				<input type="button" id="crazy" value="<:o)" /></p>
+			
+		</footer>
+
+
+		<script>
+			var dim = { x:700, y: 700 }
+
+			$('#crazy').on('click',function(){
+				$('header,footer').remove()
+				$('#gameboard').css({width:'100%',maxWidth:'none'})
+				dim.x = $(window).width()
+				dim.y = $(window).height()
+				$(window).trigger('resize')
+			})
+
+
+			/**
+			 *	JQuery object to automatically redim
+			 *	the sprite according to the window size
+			 *
+			 */
+			$.fn.spritePosition = function(p){
+				hh = $('header').height()
+				fh = $('footer').height()
+				ww = $(window).width()
+				wh = $(window).height()
+				
+				gw = (ww>dim.x ? dim.x : ww) 
+				gh = (wh-hh-fh>dim.y ? dim.y : wh-hh-fh)
+				
+				shift = ( p.type=='player' ? 20 : 0 )
+
+				var opt = {
+					width: gw / 20,
+					height: gh / 19
+				}
+
+				$(this).css({
+					width:	Math.round(opt.width) + 'px',
+					height:	Math.round(opt.height + shift) + 'px'
+				})
+				
+				if( p.type=='player' ){
+					$(this).find('p').css({top:(opt.height+shift+5)+'px'})
+				}
+				
+				if( p.type!='player' ){
+					$(this).children().css({
+						width:(opt.width*2/3)+'px',
+						height:(opt.height*2/3)+'px',
+					})
+					$(this).find('p').css({
+						width:(opt.width)+'px',
+						height: (opt.height) + 'px',
+						lineHeight: (opt.height) + 'px'
+					})
+				}
+				
+				if(p){
+					$(this).clearQueue().animate({
+						top:		(p.y * opt.height - shift) + 'px',
+						left:	(p.x * opt.width) + 'px'
+					})
+				}
+				
+				return $(this)
+			}
+		
+
+		
+			$(window).resize(function(){
+				hh = $('header').height()
+				fh = $('footer').height()
+				ww = $(window).width()
+				wh = $(window).height()
+				
+				gw = (ww>dim.x ? dim.x : ww) 
+				gh = (wh-hh-fh>dim.y ? dim.y : wh-hh-fh)
+				
+				$('#gameboard').width(gw)
+				$('#gameboard').height(gh)
+				$('#gameboard>div').height(gh/19)
+
+				$('.wall,.ground,.player,.item').width(gw/20).height(gh/19)
+				
+				sprite = {
+					width: gw / 20,
+					height: gh / 19
+				}
+				
+				$('.item,.player').each(function(){
+					$(this).spritePosition($(this).data('obj'))
+				})
+			}).trigger('resize')
+			
+			
+
+
+			$('#controller').on('click',function(){
+				$('footer').empty().html('<iframe src="./ctrl" scrolling=no></iframe>')
+				$(window).trigger('resize')
+			})
+			
+			
+			
+
+			var socket = io.connect(':8080')
+
+			socket.emit('gameboard',{},function(gameboard){
+				var x=0; var y=0; var coords=''
+				$(gameboard).each(function(){
+					line = $('<div>').appendTo('#gameboard').attr('class','line')
+					$(this).each(function(id,obj){
+						//coords = y+':'+x
+						line.append('<div class="' + (obj?"ground":"wall") + '">'+coords+'</div>')
+						x++
+					})
+					y++; x = 0
+				})
+				$(window).trigger('resize')
+			})
+			
+			addObject = function(p){
+				obj = $('<div></div>')
+					.attr('class',p.type+' '+p.name)
+					.attr('id',p._id)
+					.append($('<div>').css('backgroundColor',p.color))
+					.spritePosition(p)
+					.append('<p>'+p.name+'</p>')
+					.appendTo('#gameboard')
+					.show('slow')
+					.data('obj',p)
+			}
+
+			socket.emit('objectList',{},function(o){
+				$(o).each(function(){
+					addObject( this )
+				})
+			})
+
+			socket.on('addObject', function(o){
+				addObject( o )
+			})
+
+			socket.on('removeObject', function(id){
+				$('#'+ id).remove()
+			})
+
+			socket.on('deleteObject', function(id){
+				$('#'+id).fadeOut(1200,'easeInOutElastic',function(){$(this).remove()})
+			})
+
+			socket.on('removeAllObject',function(type){
+				$('.'+type).remove()
+			})
+
+			socket.on('newPlayerPosition', function(p){
+				$(p).each(function(){
+					$('#'+this._id)
+						.clearQueue()
+						.spritePosition(p)
+				})
+			})
+			
+			
+
+	  
+		</script>
+	</body>
+</html>

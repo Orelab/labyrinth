@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+		<meta name="author" content="Aurélien Chirot">
+
+		<title>game</title>
+	
+		<link rel="apple-touch-icon" href="assets/img/logo.png">
+		<link rel="apple-touch-icon-precomposed" href="assets/img/logo.png">
+		<link rel="apple-touch-startup-image" href="assets/img/logo.png" />
+		<link rel="shortcut icon" href="assets/img/favicon.png">
+		<link rel="author" href="http://www.funworks.fr" />
+		<link rel="stylesheet" href="/assets/css/gameboard2.css" />
+		<link rel="stylesheet" href="/assets/css/jquery-ui.min.css" />
+
+		<script src="/assets/js/jquery-1.10.1.min.js"></script>
+		<script src="/assets/js/jquery-ui.min.js"></script>
+		<script src="/assets/js/jsqr-0.2-min.js"></script>
+		<script src="/socket.io/socket.io.js"></script>
+	</head>
+	<body>
+	
+		<header></header>
+		
+		<section id="gameboard"></section>
+		
+		<footer>
+			<section>
+				<h1>Tablette & smartphone</h1>
+				<p>Flashe ce code et utilise ton mobile 
+				comme une manette de jeu&nbsp;:</p>
+
+				<!-- http://goqr.me/#t=url -->
+				<a href="/control" target="_blank">
+					<img src="assets/img/dev.funworks.fr.control.png" alt="control your player !" />
+				</a>
+			</section>
+
+			<section>
+				<h1>Ordinateur :</h1>
+				<p>Pas de tablette ni de smartphone ? Joue sur cet ordinateur :</p>
+				<button id="controller">Afficher la manette</button>
+			</section>
+
+			<p>Fait par <a href="http://www.funworks.fr">Orel</a> pour amuser la galerie 
+				<input type="button" id="crazy" value="<:o)" />
+				<input type="button" id="lazy" value="<:p" /></p>
+			
+		</footer>
+
+
+
+		<script>
+		
+			//-- misc
+			
+			var audio = true
+			
+			
+			
+			var funkyColor = [
+				'red', 'orange', 'blue', 'green'	// wall colors
+			
+			]
+		
+			
+			
+			//-- sounds
+			
+			playSound = function( sample ){
+				if( audio ){
+					var snd  = new Audio()
+					var src  = document.createElement("source")
+					src.type = 'audio/mpeg'
+					src.src  = '/assets/audio/' + sample + '.mp3'
+					snd.appendChild(src)
+					snd.play()
+				}
+			}
+			
+
+
+
+			//-- window & object redim
+
+			var gw = 700	// gameboard width
+			var gh = 550	// gameboard height
+
+			appResize = function(){
+				hh = $('header').height()
+				fh = $('footer').height()
+				ww = $(window).width()
+				wh = $(window).height()
+				
+				gw = (ww>gw ? gw : ww) 
+				gh = (wh>gh ? gh : wh)
+				
+				$('#gameboard').width(gw)
+				$('#gameboard').height(gh)
+				$('#gameboard>div').height(gh/19)
+
+				$('.wall,.ground,.player,.item').width(gw/20).height(gh/19)
+				
+				$('.item,.player').each(function(){
+					$(this).spritePosition($(this).data('obj'))
+				})
+			}
+
+			$.fn.spritePosition = function(p){
+				shift = ( p.type=='player' ? 0 : 0 )
+
+				var opt = {
+					width: gw / 20,
+					height: gh / 19
+				}
+
+				$(this).css({
+					width:	Math.round(opt.width) + 'px',
+					height:	Math.round(opt.height + shift) + 'px'
+				})
+				
+				if( p.type=='player' ){
+					$(this).find('p').css({top:(opt.height+shift+5)+'px'})
+				}
+				
+				if( p.type!='player' ){
+					$(this).children().css({
+						width:(opt.width*2/3)+'px',
+						height:(opt.height*2/3)+'px',
+					})
+					$(this).find('p').css({
+						width:(opt.width)+'px',
+						height: (opt.height) + 'px',
+						lineHeight: (opt.height) + 'px'
+					})
+				}
+				
+				if(p){
+					if( p.type == 'player' ){
+						//speed = (1-((p.speed<20?(p.speed/3):9)/10))*200
+						speed = 150 + ( p.speed<5 ? (5-p.speed)*40 : 0 ) + 100	// +100 to absorbe latency...
+					}
+					else speed = 0
+				
+					$(this).clearQueue().animate({
+						top:		(p.y * opt.height - shift) + 'px',
+						left:	(p.x * opt.width) + 'px'
+					}, speed, 'linear')
+				}
+				
+				return $(this)
+			}
+
+			$('#crazy').on('click',function(){
+				$('header,footer').remove()
+				$('#gameboard').css({width:'100%',maxWidth:'none'})
+				$(window).resize(function(){
+					gw = $(window).width()
+					gh = $(window).height()
+				}).trigger('resize').trigger('resize')
+			})
+			
+			$(window).resize(appResize).trigger('resize')
+			
+			
+
+			//-- bundeled gamepad
+
+			$('#controller').on('click',function(){
+				$('footer').html('<iframe src="./control" scrolling=no></iframe>')
+				$(window).trigger('resize')
+			})
+			
+			
+			
+			
+			//-- game
+
+			var socket = io.connect()
+
+			socket.emit('gameboard',{},function(gameboard){
+				var x=0; var y=0; var coords=''
+				$(gameboard).each(function(){
+					line = $('<div>').appendTo('#gameboard').attr('class','line')
+					$(this).each(function(id,obj){
+						//coords = y+':'+x
+
+						if(!obj){
+							fc=funkyColor[Math.floor(Math.random()*funkyColor.length)]
+							fc=' style="background-color:'+fc+';"'
+						} else fc=''
+						
+						line.append('<div class="' + (obj?"ground":"wall") + '"' + fc + '">'+coords+'</div>')
+						x++
+					})
+					y++; x = 0
+				})
+				$(window).trigger('resize')
+			})
+			
+			addObject = function(p){
+				obj = $('<div></div>')
+					.attr('class',p.type+' '+p.name)
+					.attr('id',p._id)
+					.append('<div>')
+					.spritePosition(p)
+					.append('<p>'+p.name+'</p>')
+					.appendTo('#gameboard')
+					.show('slow')
+					.data('obj',p)
+
+				if(p.type=='player')
+					obj.css('backgroundColor',p.color)
+			}
+
+			socket.emit('objectList',{},function(o){
+				$(o).each(function(){
+					addObject( this )
+				})
+			})
+
+			socket.on('addObject', function(o){
+				addObject( o )
+			})
+
+			socket.on('removeObject', function(id){
+				$('#'+ id).remove()
+			})
+
+			socket.on('deleteObject', function(id){
+				$('#'+ id)
+					.attr('class','rocket')
+					.html('<img src="/assets/img/rocket.png"/>')
+					.animate({
+						top:-100,
+						done:$(this).remove()
+					},700,'linear')
+				playSound('metalplate') 
+			})
+
+			socket.on('removeAllObject',function(type){
+				$('.'+type).remove()
+			})
+
+			socket.on('newPlayerPosition', function(p){
+				$(p).each(function(){
+					$('#'+this._id)
+						.clearQueue()
+						.spritePosition(p)
+				})
+			})
+			
+			
+
+	  
+		</script>
+	</body>
+</html>

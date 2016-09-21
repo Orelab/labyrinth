@@ -1,0 +1,166 @@
+* {
+	margin: 0;
+	padding: 0;
+}
+
+body {
+	font-family: verdana;
+}
+
+
+
+#pad,
+#goodies {
+	position: relative;
+	display: inline-block;
+	background-color: lightGrey;
+	vertical-align: top;
+	height: 312px;
+	padding: 0 0 10px 10px;
+	margin-top: 5px;
+	border-radius: 15px;
+}
+
+#pad>*,
+#goodies>* {
+	margin: 10px 10px 0 0;
+
+}
+
+
+/* --- pad --- */
+
+#pad{
+	margin-left: 5px;
+	max-width: 320px;
+}
+
+#cursor {
+	position: relative;
+	width: 300px;
+	height: 300px;
+	background: url(/assets/img/pad.png) no-repeat center center;
+	background-size: 100% 100%;
+	border-radius: 150px;
+}
+
+#pointer {
+	display: block;
+	position: absolute;
+	top: 107px;
+	left: 107px;
+	width: 85px;
+	height: 85px;
+	border-radius: 43px;
+	cursor: pointer;
+	background-color: lightBlue;
+}
+
+
+
+
+
+/* --- goodies --- */
+
+
+#goodies {
+	text-align: center;
+	max-width: 312px;
+}
+
+#avatar {
+	height: 40px;
+	background-color: #E9E8E8;
+	padding: 5px;
+	border-radius: 10px;
+}
+
+#avatar>div {
+	display: inline;
+	width: 40px;
+	height: 40px;
+	border-radius: 100%;
+	background: darkRed url(/assets/img/smiley5.png) no-repeat center center;
+	background-size: 100% 100%;
+	float: left;
+}
+
+#avatar>p {
+	line-height: 40px;
+	vertical-align: center;
+}
+
+#lifegauge,
+#giftgauge {
+	width: 45%;
+	display: inline-block;
+	margin: 10px 0 0 0;
+}
+
+#lifegauge *,
+#giftgauge * {
+	display: inline-block;
+}
+
+#goodies button {
+	display: inline-block;
+	float: left;
+	width: 94px;
+	height: 80px;
+	border: none;
+	background-color: #E9E8E8;
+	border-radius: 10px;
+}
+
+#trap {
+	background: url(../img/trap.png) no-repeat center center;
+	background-size: 60px auto;
+}
+
+#bomb {
+	background: url(../img/bomb.png) no-repeat center center;
+	background-size: 60px auto;
+}
+
+#rocket {
+	background: url(../img/os.png) no-repeat center center;
+	background-size: 60px auto;
+}
+
+#strong {
+	background: url(../img/muscle.png) no-repeat center center;
+	background: url(../img/muscle-nb.png) no-repeat center center;
+	background-size: auto  60px;
+}
+
+#speed {
+	background: url(../img/roller.png) no-repeat center center;
+	background: url(../img/roller-nb.png) no-repeat center center;
+	background-size: auto  60px;
+}
+
+#life {
+	background: url(../img/coeur.png) no-repeat center center;
+	background-size: auto  60px;
+}
+
+footer {
+	clear: both;
+	padding-top: 2px;
+}
+
+footer span {
+	display: inline-block;
+	height: 20px;
+	line-height: 20px;
+	vertical-align: middle;
+}
+
+footer img {
+	max-width: 20px;
+	max-height: 20px;
+}
+
+
+
+
