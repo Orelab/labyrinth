@@ -181,7 +181,7 @@ FW.Item.prototype.update = function( delta ){
 		// Debug
 		
 		if( config.dev ) {
-			this.parent.add( new FW.Marker( this.position.x, this.position.y, 2 ) )
+//			this.parent.add( new FW.Marker( this.position.x, this.position.y, 2 ) )
 		}
 	}
 }

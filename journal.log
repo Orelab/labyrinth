@@ -152,3 +152,52 @@ Failed to load c++ bson extension, using pure JS version
   invincible: false,
   speed: false,
   _id: 57e2997a6ea981ee59f15640 }
+Failed to load c++ bson extension, using pure JS version
+{ name: 'orel',
+  type: 'player',
+  room: 'default',
+  x: 9,
+  y: 8,
+  color: '#9B5643',
+  lastMove: 1474468818114,
+  lastDirection: false,
+  life: 2,
+  gift: 20,
+  invincible: false,
+  speed: false,
+  _id: 57e29bd232e3d8255c7a4866 }
+orel use rocket
+js-bson: Failed to load c++ bson extension, using pure JS version
+orel use bomb
+orel use bomb
+orel use bomb
+orel use bomb
+orel use bomb
+orel use bomb
+orel use speed
+Failed to load c++ bson extension, using pure JS version
+Failed to load c++ bson extension, using pure JS version
+{ name: 'orel',
+  type: 'player',
+  room: 'default',
+  x: 9,
+  y: 7,
+  color: '#2C26D9',
+  lastMove: 1474541423765,
+  lastDirection: false,
+  life: 2,
+  gift: 20,
+  invincible: false,
+  speed: false,
+  _id: 57e3b76fde12ff7813b7ee58 }
+orel use rocket
+js-bson: Failed to load c++ bson extension, using pure JS version
+orel use trap
+orel use bomb
+orel has been touched by a flame
+orel use life
+orel use life
+orel use life
+orel use life
+orel use life
+Failed to load c++ bson extension, using pure JS version

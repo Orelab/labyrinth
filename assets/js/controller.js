@@ -114,7 +114,7 @@ app.pointer = $('#pointer').on({
 	
 //-- misc vars
 
-app.socket = io.connect(':8088');
+app.socket = io.connect(config.port);
 
 app.p = {
 	_id     : 0,

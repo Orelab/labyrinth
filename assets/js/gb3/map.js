@@ -12,7 +12,7 @@ FW.Map = function( callback ){
 	this.gameboard = []					// Array of points describing the gameboard
 	
 
-	var socket = io.connect(':8088')
+	var socket = io.connect( config.port )
 
 	var scope = this						// Closure for socket
 
