@@ -28,3 +28,7 @@ http://[serveraddress]:8088/admin
 
 ![alt tag](https://github.com/Orelab/labyrinth/blob/master/assets/img/screenshot4.png)
 
+
+## Online demo
+
+http://game.funworks.fr/
